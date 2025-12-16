@@ -1,6 +1,6 @@
 export default function DashboardPage() {
   const stats = [
-    { label: "Hadir Hari Ini", value: 12 },
+    { label: "Hadir Hari Ini", value: 12, color: "text-green-600" },
     { label: "Telat", value: 2, color: "text-red-600" },
     { label: "Belum Absen", value: 5, color: "text-yellow-600" },
   ];
