@@ -7,8 +7,8 @@ import Badge from "@/components/ui/Badge";
 import CameraPreview from "@/components/absensi/CameraPreview";
 
 const OFFICE_LOCATION = {
-  lat: -7.565,
-  lng: 110.816,
+  lat: -7.567925, // Koordinat Karanganyar (sekitar alun-alun)
+  lng: 110.871686,
   radius: 100, // meter
 };
 
@@ -37,43 +37,34 @@ export default function AbsensiPage() {
   const [distance, setDistance] = useState<number | null>(null);
   const [gpsValid, setGpsValid] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [photo, setPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     if (!navigator.geolocation) {
       alert("Browser tidak mendukung GPS");
-      setLoading(false);
       return;
     }
 
-    const geoTimeout = setTimeout(() => {
-      setLoading(false);
-      alert("Mengambil lokasi terlalu lama. Pastikan GPS aktif dan izinkan akses lokasi.");
-    }, 10000); // 10 detik timeout
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        clearTimeout(geoTimeout);
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
+
         const dist = getDistanceFromLatLonInMeters(
           userLat,
           userLng,
           OFFICE_LOCATION.lat,
           OFFICE_LOCATION.lng
         );
+
         setLat(userLat);
         setLng(userLng);
         setDistance(dist);
         setGpsValid(dist <= OFFICE_LOCATION.radius);
         setLoading(false);
-        console.log('Lokasi berhasil:', userLat, userLng, dist);
       },
-      (err) => {
-        clearTimeout(geoTimeout);
-        alert("Gagal mengambil lokasi: " + err.message);
+      () => {
+        alert("Gagal mengambil lokasi");
         setLoading(false);
-        console.error('Geolocation error:', err);
       },
       {
         enableHighAccuracy: true,
@@ -84,10 +75,8 @@ export default function AbsensiPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">
-          Absensi
-        </h1>
-        <p className="text-sm text-[var(--muted)]">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Absensi</h1>
+        <p className="text-sm text-emerald-900">
           Absensi menggunakan kamera dan GPS
         </p>
       </div>
@@ -95,15 +84,8 @@ export default function AbsensiPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Kamera */}
         <Card>
-        <h2 className="text-lg font-semibold mb-4">Kamera</h2>
-
-        <CameraPreview onCapture={(img) => setPhoto(img)} />
-
-        {!photo && (
-            <p className="text-xs text-[var(--muted)] mt-2">
-            Pastikan wajah terlihat jelas
-            </p>
-        )}
+          <h2 className="text-lg font-semibold mb-4">Kamera</h2>
+          <CameraPreview onCapture={() => {}} />
         </Card>
 
         {/* GPS */}
@@ -145,10 +127,10 @@ export default function AbsensiPage() {
         </div>
 
         <Button
-        disabled={!gpsValid || !photo}
-        className={!gpsValid || !photo ? "opacity-50 cursor-not-allowed" : ""}
+          disabled={!gpsValid}
+          className={!gpsValid ? "opacity-50 cursor-not-allowed" : ""}
         >
-        Absen Sekarang
+          Absen Sekarang
         </Button>
       </Card>
     </div>

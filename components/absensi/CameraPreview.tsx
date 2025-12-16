@@ -15,24 +15,50 @@ export default function CameraPreview({ onCapture }: CameraPreviewProps) {
   const [captured, setCaptured] = useState<string | null>(null);
 
   useEffect(() => {
+    // Cek permission kamera sebelum mencoba akses
+    if (navigator.permissions) {
+      navigator.permissions
+        .query({ name: "camera" as PermissionName })
+        .then((result) => {
+          if (result.state === "denied") {
+            alert("Akses kamera ditolak. Silakan izinkan kamera di browser.");
+          }
+        });
+    }
     startCamera();
     return () => stopCamera();
   }, []);
 
   const startCamera = async () => {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Browser tidak mendukung kamera");
+        return;
+      }
+      // Cek permission kamera secara eksplisit (untuk browser modern)
+      if (navigator.permissions) {
+        const perm = await navigator.permissions.query({
+          name: "camera" as PermissionName,
+        });
+        if (perm.state === "denied") {
+          alert("Akses kamera ditolak. Silakan izinkan kamera di browser.");
+          return;
+        }
+      }
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
         audio: false,
       });
-
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
-
       setStream(mediaStream);
     } catch (err) {
-      alert("Gagal mengakses kamera");
+      console.error("Gagal mengakses kamera:", err);
+      alert(
+        "Gagal mengakses kamera: " +
+          (err instanceof Error ? err.message : "Unknown error")
+      );
     }
   };
 
