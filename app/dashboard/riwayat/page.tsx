@@ -14,18 +14,18 @@ export default async function RiwayatDashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Riwayat Absensi</h1>
-        <p className="text-2xl font-bold text-gray-800">Daftar absensi terakhir Anda</p>
+        <p className="text-sm text-gray-900">Daftar absensi terakhir Anda</p>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white rounded-xl shadow text-[var(--foreground)]">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left">Nama</th>
-              <th className="px-4 py-2 text-left">Waktu</th>
-              <th className="px-4 py-2 text-left">Tipe</th>
-              <th className="px-4 py-2 text-left">Lokasi</th>
-              <th className="px-4 py-2 text-left">Foto</th>
-              <th className="px-4 py-2 text-left">Aksi</th>
+              <th className="px-4 py-2 text-left text-gray-700">Nama</th>
+              <th className="px-4 py-2 text-left text-gray-700">Waktu</th>
+              <th className="px-4 py-2 text-left text-gray-700">Tipe</th>
+              <th className="px-4 py-2 text-left text-gray-700">Lokasi</th>
+              <th className="px-4 py-2 text-left text-gray-700">Foto</th>
+              <th className="px-4 py-2 text-left text-gray-700">Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -35,14 +35,14 @@ export default async function RiwayatDashboardPage() {
               </tr>
             ) : attendances.map((a) => (
               <tr key={a.id} className="border-b last:border-none hover:bg-gray-50/50">
-                <td className="px-4 py-2">{a.user?.name ?? '-'}</td>
-                <td className="px-4 py-2">{new Date(a.createdAt).toLocaleString()}</td>
+                <td className="px-4 py-2 text-gray-700">{a.user?.name ?? '-'}</td>
+                <td className="px-4 py-2 text-gray-700">{new Date(a.createdAt).toLocaleString()}</td>
                 <td className="px-4 py-2">
                   <Badge variant={a.type === 'IN' ? 'success' : 'default'}>
                     {a.type}
                   </Badge>
                 </td>
-                <td className="px-4 py-2 text-xs">
+                <td className="px-4 py-2 text-xs text-gray-600">
                   <span className="block">Lat: {a.latitude}</span>
                   <span className="block">Lng: {a.longitude}</span>
                 </td>

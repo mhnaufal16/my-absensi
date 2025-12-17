@@ -1,6 +1,21 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import Button from "@/components/ui/Button";
+
 export default function Navbar() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Logout failed", e);
+    } finally {
+      router.push("/login");
+    }
+  };
+
   return (
     <header
       className="
@@ -12,23 +27,15 @@ export default function Navbar() {
     >
       {/* Left */}
       <div>
-        <h1 className="text-lg font-semibold text-[var(--foreground)]">
-          Dashboard
-        </h1>
-        <p className="text-sm text-[var(--muted)]">
-          Sistem Absensi Kamera & GPS
-        </p>
+        <h1 className="text-lg font-semibold text-[var(--foreground)]">Dashboard</h1>
+        <p className="text-sm text-[var(--muted)]">Sistem Absensi Kamera & GPS</p>
       </div>
 
       {/* Right */}
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="text-sm font-medium text-[var(--foreground)]">
-            Naufal
-          </p>
-          <p className="text-xs text-[var(--muted)]">
-            Karyawan
-          </p>
+          <p className="text-sm font-medium text-[var(--foreground)]">Naufal</p>
+          <p className="text-xs text-[var(--muted)]">Karyawan</p>
         </div>
 
         {/* Avatar */}
@@ -41,6 +48,12 @@ export default function Navbar() {
           "
         >
           N
+        </div>
+
+        <div>
+          <Button variant="secondary" onClick={handleLogout}>
+            Logout
+          </Button>
         </div>
       </div>
     </header>

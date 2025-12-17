@@ -18,7 +18,8 @@ model User {
 model Attendance {
   id        Int      @id @default(autoincrement())
   userId    Int
-  photo     String
+  // photo can be a large base64 string; use LongText for MySQL
+  photo     String   @db.LongText
   latitude  Float
   longitude Float
   type      String
