@@ -4,6 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import Badge from "@/components/ui/Badge";
+import { useEffect, useState } from "react";
+
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
+  return null;
+}
 
 const menus = [
   { name: "Dashboard", href: "/dashboard" },
@@ -13,6 +22,11 @@ const menus = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    setIsAdmin(getCookie("userRole") === "ADMIN");
+  }, []);
 
   return (
     <aside
@@ -55,6 +69,17 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {isAdmin && (
+          <div className="pt-4 mt-4 border-t border-[var(--border)]">
+            <Link
+              href="/admin"
+              className="flex items-center px-3 py-2 rounded-xl text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all"
+            >
+              🛡️ Admin Panel
+            </Link>
+          </div>
+        )}
       </nav>
     </aside>
   );

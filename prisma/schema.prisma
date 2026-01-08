@@ -8,10 +8,11 @@ datasource db {
 }
 
 model User {
-  id        Int          @id @default(autoincrement())
-  name      String
-  email     String       @unique
-  password  String
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  password    String
+  role        String       @default("USER") // "ADMIN" or "USER"
   attendances Attendance[]
 }
 
@@ -33,4 +34,12 @@ model Attendance {
   updatedAt       DateTime @updatedAt @default(now())
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

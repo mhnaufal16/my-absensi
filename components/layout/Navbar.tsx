@@ -2,9 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
+import { useEffect, useState } from "react";
+
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
+  return null;
+}
 
 export default function Navbar() {
   const router = useRouter();
+  const [role, setRole] = useState("Karyawan");
+
+  useEffect(() => {
+    const userRole = getCookie("userRole");
+    if (userRole === "ADMIN") setRole("Admin");
+    else setRole("Karyawan");
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -34,8 +50,8 @@ export default function Navbar() {
       {/* Right */}
       <div className="flex items-center gap-4">
         <div className="text-right">
-          <p className="text-sm font-medium text-[var(--foreground)]">Naufal</p>
-          <p className="text-xs text-[var(--muted)]">Karyawan</p>
+          <p className="text-sm font-medium text-[var(--foreground)]">User</p>
+          <p className="text-xs text-[var(--muted)]">{role}</p>
         </div>
 
         {/* Avatar */}
@@ -47,7 +63,7 @@ export default function Navbar() {
             text-white font-semibold
           "
         >
-          N
+          {role === "Admin" ? "A" : "U"}
         </div>
 
         <div>

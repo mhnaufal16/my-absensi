@@ -21,9 +21,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Email atau password salah" }, { status: 401 });
     }
 
-    const res = NextResponse.json({ success: true, user: { id: user.id, name: user.name, email: user.email } });
-    // set a simple httpOnly cookie with userId for demo purposes
+    const res = NextResponse.json({
+      success: true,
+      user: { id: user.id, name: user.name, email: user.email, role: (user as any).role }
+    });
+    // set cookies for demo purposes
     res.cookies.set("userId", String(user.id), { httpOnly: true, path: "/", maxAge: 60 * 60 * 24 * 7 });
+    res.cookies.set("userRole", (user as any).role, { httpOnly: false, path: "/", maxAge: 60 * 60 * 24 * 7 });
     return res;
   } catch (err) {
     console.error("Auth login error", err);

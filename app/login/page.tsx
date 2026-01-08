@@ -29,8 +29,12 @@ export default function LoginPage() {
         return;
       }
 
-      // success — navigate to dashboard
-      router.push("/dashboard");
+      // success — navigate to dashboard based on role
+      if (data.user.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       console.error("Login error", err);
       setError("Gagal menghubungi server");

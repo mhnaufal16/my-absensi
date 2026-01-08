@@ -77,7 +77,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Latitude/longitude tidak valid" }, { status: 400 });
     }
 
-    const distance = getDistanceMeters(latNum, lngNum, OFFICE.lat, OFFICE.lng);
+    const distance = getDistanceMeters(latNum as number, lngNum as number, OFFICE.lat, OFFICE.lng);
     if (distance > RADIUS) {
       return NextResponse.json({ message: "Di luar radius kantor", distance }, { status: 403 });
     }
@@ -94,9 +94,20 @@ export async function POST(req: Request) {
 
     const existing = (await prisma.attendance.findFirst({ where: { userId: uid, createdAt: { gte: start, lt: end } } })) as Attendance | null;
 
-    // parse scheduled times if provided (ISO strings expected)
-    const schedStart = scheduledStart ? new Date(scheduledStart) : null;
-    const schedEnd = scheduledEnd ? new Date(scheduledEnd) : null;
+    // Fetch settings for scheduling
+    const dbSettings = await (prisma as any).setting.findMany();
+    const getS = (key: string, def: string) => dbSettings.find((s: any) => s.key === key)?.value || def;
+
+    const sStartStr = getS('workStartTime', '08:00');
+    const sEndStr = getS('workEndTime', '17:00');
+
+    const [sStartH, sStartM] = sStartStr.split(':').map(Number);
+    const [sEndH, sEndM] = sEndStr.split(':').map(Number);
+
+    const schedStart = new Date(now);
+    schedStart.setHours(sStartH, sStartM, 0, 0);
+    const schedEnd = new Date(now);
+    schedEnd.setHours(sEndH, sEndM, 0, 0);
 
     if (action === "checkin") {
       if (existing && existing.checkIn) {
@@ -106,8 +117,8 @@ export async function POST(req: Request) {
       const data = {
         userId: uid,
         photo: photo ?? existing?.photo ?? "",
-        latitude: latNum,
-        longitude: lngNum,
+        latitude: latNum as number,
+        longitude: lngNum as number,
         type: "IN",
         checkIn: now,
         scheduledStart: schedStart,
@@ -116,9 +127,9 @@ export async function POST(req: Request) {
 
       let attendance: Attendance;
       if (existing) {
-        attendance = await prisma.attendance.update({ where: { id: existing.id }, data });
+        attendance = await prisma.attendance.update({ where: { id: existing.id }, data: data as any });
       } else {
-        attendance = await prisma.attendance.create({ data });
+        attendance = await prisma.attendance.create({ data: data as any });
       }
 
       const computed = computeStatus(attendance.checkIn ? new Date(attendance.checkIn) : null, attendance.checkOut ? new Date(attendance.checkOut) : null, schedStart, schedEnd);
@@ -132,7 +143,18 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "Belum melakukan check-in" }, { status: 400 });
       }
 
-      const attendance = await prisma.attendance.update({ where: { id: existing.id }, data: { checkOut: now, photo: photo ?? existing.photo, latitude: latNum, longitude: lngNum, type: "OUT", scheduledStart: schedStart, scheduledEnd: schedEnd } });
+      const attendance = await prisma.attendance.update({
+        where: { id: existing.id },
+        data: {
+          checkOut: now,
+          photo: photo ?? existing.photo,
+          latitude: latNum as number,
+          longitude: lngNum as number,
+          type: "OUT",
+          scheduledStart: schedStart,
+          scheduledEnd: schedEnd
+        } as any
+      });
 
       const computed = computeStatus(attendance.checkIn ? new Date(attendance.checkIn) : null, attendance.checkOut ? new Date(attendance.checkOut) : null, schedStart, schedEnd);
       await prisma.attendance.update({ where: { id: attendance.id }, data: { status: computed.status, durationMinutes: computed.durationMinutes } });

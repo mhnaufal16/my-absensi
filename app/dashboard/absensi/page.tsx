@@ -27,6 +27,12 @@ export default function AbsensiPage() {
     }
 
     setSubmitting(true);
+    const getCookie = (name: string) => {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
+    };
+    const userId = getCookie("userId") || "1";
+
     try {
       console.log("Submitting attendance", { photo: !!photo, lat, lng });
 
@@ -36,13 +42,12 @@ export default function AbsensiPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: 1, // sementara (nanti dari session)
+          userId: Number(userId),
           photo,
           latitude: lat,
           longitude: lng,
           action,
-          scheduledStart: new Date(new Date().setHours(8, 0, 0, 0)).toISOString(),
-          scheduledEnd: new Date(new Date().setHours(17, 0, 0, 0)).toISOString(),
+          // scheduled times are now handled by backend from global settings
         }),
       });
 
@@ -79,8 +84,14 @@ export default function AbsensiPage() {
   }, []);
 
   async function fetchTodayStatus() {
+    const getCookie = (name: string) => {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+      return match ? match[2] : null;
+    };
+    const userId = getCookie("userId") || "1";
+
     try {
-      const res = await fetch("/api/absensi?userId=1");
+      const res = await fetch(`/api/absensi?userId=${userId}`);
       const data = await res.json();
       if (data.success) {
         setToday(data.attendance);

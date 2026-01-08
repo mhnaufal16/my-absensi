@@ -7,23 +7,25 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  const email = process.env.DEMO_EMAIL || 'demo@example.com';
-  const plain = process.env.DEMO_PASS || 'secret123';
+  const email = process.env.DEMO_EMAIL || 'admin@example.com';
+  const plain = process.env.DEMO_PASS || 'admin123';
+  const role = process.env.DEMO_ROLE || 'ADMIN';
 
   const hashed = bcrypt.hashSync(plain, 10);
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    console.log('User already exists:', existing.email, '(id=' + existing.id + ')');
-    console.log('If you want to update the password, delete the user or adjust the script.');
+    console.log('User already exists:', existing.email, '(id=' + existing.id + ', role=' + existing.role + ')');
+    console.log('If you want to update the password or role, delete the user or adjust the script.');
     return;
   }
 
   const user = await prisma.user.create({
     data: {
-      name: 'Demo User',
+      name: role === 'ADMIN' ? 'Admin User' : 'Demo User',
       email,
       password: hashed,
+      role: role,
     },
   });
 
