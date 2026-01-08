@@ -18,6 +18,7 @@ export default function AbsensiPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [today, setToday] = useState<any>(null);
 
   const submitAttendance = async () => {
     if (!photo || lat === null || lng === null || !gpsValid) {
@@ -29,6 +30,8 @@ export default function AbsensiPage() {
     try {
       console.log("Submitting attendance", { photo: !!photo, lat, lng });
 
+      const action = (today?.checkIn && !today?.checkOut) ? "checkout" : "checkin";
+
       const res = await fetch("/api/absensi", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,7 +40,9 @@ export default function AbsensiPage() {
           photo,
           latitude: lat,
           longitude: lng,
-          type: "IN",
+          action,
+          scheduledStart: new Date(new Date().setHours(8, 0, 0, 0)).toISOString(),
+          scheduledEnd: new Date(new Date().setHours(17, 0, 0, 0)).toISOString(),
         }),
       });
 
@@ -51,8 +56,9 @@ export default function AbsensiPage() {
       console.log("Attendance response", res.status, data);
 
       if (res.ok) {
-        setMessage("Absen berhasil");
-        alert("Absen berhasil");
+        setMessage(`Absen ${action === 'checkin' ? 'masuk' : 'pulang'} berhasil`);
+        setToday(data?.attendance);
+        alert(`Absen ${action === 'checkin' ? 'masuk' : 'pulang'} berhasil`);
       } else {
         const msg = data?.message ?? `Gagal: status ${res.status}`;
         setMessage(msg);
@@ -68,8 +74,21 @@ export default function AbsensiPage() {
 
   useEffect(() => {
     requestLocation();
+    fetchTodayStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function fetchTodayStatus() {
+    try {
+      const res = await fetch("/api/absensi?userId=1");
+      const data = await res.json();
+      if (data.success) {
+        setToday(data.attendance);
+      }
+    } catch (err) {
+      console.error("Fetch today status error:", err);
+    }
+  }
 
   async function requestLocation() {
     setLoading(true);
@@ -280,12 +299,19 @@ export default function AbsensiPage() {
             ) : null}
 
             {message ? <p className="mt-2 text-sm text-green-700">{message}</p> : null}
+
+            {today?.checkIn && today?.checkOut && (
+              <p className="mt-2 text-sm text-blue-700 font-medium">✨ Anda sudah menyelesaikan absensi hari ini.</p>
+            )}
           </div>
         </div>
 
         <div className="ml-4">
-          <Button onClick={submitAttendance} disabled={!photo || !gpsValid || submitting}>
-            {submitting ? "Mengirim..." : "Absen Masuk"}
+          <Button
+            onClick={submitAttendance}
+            disabled={!photo || !gpsValid || submitting || (today?.checkIn && today?.checkOut)}
+          >
+            {submitting ? "Mengirim..." : (today?.checkIn && !today?.checkOut) ? "Absen Pulang" : "Absen Masuk"}
           </Button>
         </div>
       </Card>

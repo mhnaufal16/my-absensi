@@ -1,0 +1,8 @@
+-- AlterTable
+ALTER TABLE `attendance` ADD COLUMN `checkIn` DATETIME(3) NULL,
+    ADD COLUMN `checkOut` DATETIME(3) NULL,
+    ADD COLUMN `durationMinutes` INTEGER NULL,
+    ADD COLUMN `scheduledEnd` DATETIME(3) NULL,
+    ADD COLUMN `scheduledStart` DATETIME(3) NULL,
+    ADD COLUMN `status` VARCHAR(191) NULL,
+    ADD COLUMN `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3);

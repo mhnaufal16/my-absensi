@@ -1,55 +1,146 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { OFFICE, RADIUS, getDistanceMeters } from "@/lib/office";
+import type { Attendance } from "@prisma/client";
+
+function minutesBetween(a?: Date, b?: Date) {
+  if (!a || !b) return null;
+  return Math.round((b.getTime() - a.getTime()) / 60000);
+}
+
+function computeStatus(checkIn?: Date | null, checkOut?: Date | null, scheduledStart?: Date | null, scheduledEnd?: Date | null) {
+  const result: { status: string; durationMinutes: number | null } = { status: "absen", durationMinutes: null };
+  if (checkIn) result.status = "ontime";
+  if (checkIn && scheduledStart) {
+    const late = Math.max(0, Math.round((checkIn.getTime() - scheduledStart.getTime()) / 60000));
+    if (late > 5) result.status = "telat";
+  }
+  if (checkOut && scheduledEnd) {
+    const early = Math.max(0, Math.round((scheduledEnd.getTime() - checkOut.getTime()) / 60000));
+    if (early > 5) result.status = "pulang_dini";
+  }
+  if (checkIn && checkOut) {
+    result.durationMinutes = minutesBetween(checkIn, checkOut);
+  }
+  return result;
+}
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const userId = url.searchParams.get("userId");
+    if (!userId) return NextResponse.json({ message: "userId required" }, { status: 400 });
+
+    const uid = Number(userId);
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 1);
+
+    const attendance = await prisma.attendance.findFirst({
+      where: { userId: uid, createdAt: { gte: start, lt: end } },
+    });
+
+    return NextResponse.json({ success: true, attendance });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ message: "Server error", detail: String(err) }, { status: 500 });
+  }
+}
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { userId, photo, latitude, longitude, type } = body;
+    const { userId, photo, latitude, longitude, action, scheduledStart, scheduledEnd, usingSampleCoords } = body;
 
-    // Basic validation and type coercion
-    if (!userId || !photo || latitude == null || longitude == null || !type) {
-      console.warn('Invalid payload', body);
-      return NextResponse.json({ message: "Data tidak lengkap" }, { status: 400 });
+    // allow frontend to request fallback to OFFICE coords when usingSampleCoords is true
+    let latNum = latitude != null ? Number(latitude) : null;
+    let lngNum = longitude != null ? Number(longitude) : null;
+    if ((latNum == null || lngNum == null) && usingSampleCoords) {
+      latNum = OFFICE.lat;
+      lngNum = OFFICE.lng;
     }
 
-    const latNum = Number(latitude);
-    const lngNum = Number(longitude);
+    const missing: string[] = [];
+    if (!userId) missing.push('userId');
+    if (latNum == null) missing.push('latitude');
+    if (lngNum == null) missing.push('longitude');
+    if (!action) missing.push('action');
+
+    if (missing.length > 0) {
+      console.warn('Invalid attendance payload, missing fields:', missing, body);
+      return NextResponse.json({ message: "Data tidak lengkap", missing, received: body }, { status: 400 });
+    }
+
     if (Number.isNaN(latNum) || Number.isNaN(lngNum)) {
-      console.warn('Invalid lat/lng', { latitude, longitude });
       return NextResponse.json({ message: "Latitude/longitude tidak valid" }, { status: 400 });
     }
 
     const distance = getDistanceMeters(latNum, lngNum, OFFICE.lat, OFFICE.lng);
-
     if (distance > RADIUS) {
       return NextResponse.json({ message: "Di luar radius kantor", distance }, { status: 403 });
     }
 
-    // Verify user exists before creating attendance to avoid FK errors
     const uid = Number(userId);
     const user = await prisma.user.findUnique({ where: { id: uid } });
-    if (!user) {
-      return NextResponse.json({ message: `User dengan id ${uid} tidak ditemukan` }, { status: 400 });
+    if (!user) return NextResponse.json({ message: `User dengan id ${uid} tidak ditemukan` }, { status: 400 });
+
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 1);
+
+    const existing = (await prisma.attendance.findFirst({ where: { userId: uid, createdAt: { gte: start, lt: end } } })) as Attendance | null;
+
+    // parse scheduled times if provided (ISO strings expected)
+    const schedStart = scheduledStart ? new Date(scheduledStart) : null;
+    const schedEnd = scheduledEnd ? new Date(scheduledEnd) : null;
+
+    if (action === "checkin") {
+      if (existing && existing.checkIn) {
+        return NextResponse.json({ message: "Sudah check-in" }, { status: 400 });
+      }
+
+      const data = {
+        userId: uid,
+        photo: photo ?? existing?.photo ?? "",
+        latitude: latNum,
+        longitude: lngNum,
+        type: "IN",
+        checkIn: now,
+        scheduledStart: schedStart,
+        scheduledEnd: schedEnd,
+      };
+
+      let attendance: Attendance;
+      if (existing) {
+        attendance = await prisma.attendance.update({ where: { id: existing.id }, data });
+      } else {
+        attendance = await prisma.attendance.create({ data });
+      }
+
+      const computed = computeStatus(attendance.checkIn ? new Date(attendance.checkIn) : null, attendance.checkOut ? new Date(attendance.checkOut) : null, schedStart, schedEnd);
+      await prisma.attendance.update({ where: { id: attendance.id }, data: { status: computed.status } });
+
+      return NextResponse.json({ success: true, attendance: { ...attendance, status: computed.status }, distance });
     }
 
-    try {
-      const attendance = await prisma.attendance.create({
-        data: {
-          userId: uid,
-          photo,
-          latitude: latNum,
-          longitude: lngNum,
-          type, // "IN" | "OUT"
-        },
-      });
+    if (action === "checkout") {
+      if (!existing || !existing.checkIn) {
+        return NextResponse.json({ message: "Belum melakukan check-in" }, { status: 400 });
+      }
 
-      return NextResponse.json({ success: true, attendance });
-    } catch (dbErr) {
-      console.error('Prisma create error:', dbErr);
-      const detail = process.env.NODE_ENV === 'production' ? undefined : String(dbErr);
-      return NextResponse.json({ message: 'Database error', detail }, { status: 500 });
+      const attendance = await prisma.attendance.update({ where: { id: existing.id }, data: { checkOut: now, photo: photo ?? existing.photo, latitude: latNum, longitude: lngNum, type: "OUT", scheduledStart: schedStart, scheduledEnd: schedEnd } });
+
+      const computed = computeStatus(attendance.checkIn ? new Date(attendance.checkIn) : null, attendance.checkOut ? new Date(attendance.checkOut) : null, schedStart, schedEnd);
+      await prisma.attendance.update({ where: { id: attendance.id }, data: { status: computed.status, durationMinutes: computed.durationMinutes } });
+
+      return NextResponse.json({ success: true, attendance: { ...attendance, status: computed.status, durationMinutes: computed.durationMinutes }, distance });
     }
+
+    return NextResponse.json({ message: "Action tidak dikenal" }, { status: 400 });
   } catch (error) {
     console.error('API absensi error:', error);
     return NextResponse.json({ message: "Server error", detail: String(error) }, { status: 500 });

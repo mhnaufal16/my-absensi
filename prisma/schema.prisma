@@ -19,11 +19,18 @@ model Attendance {
   id        Int      @id @default(autoincrement())
   userId    Int
   // photo can be a large base64 string; use LongText for MySQL
-  photo     String   @db.LongText
-  latitude  Float
-  longitude Float
-  type      String
-  createdAt DateTime @default(now())
+  photo           String   @db.LongText
+  latitude        Float
+  longitude       Float
+  type            String
+  checkIn         DateTime?
+  checkOut        DateTime?
+  scheduledStart  DateTime?
+  scheduledEnd    DateTime?
+  status          String?
+  durationMinutes Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt @default(now())
 
   user User @relation(fields: [userId], references: [id])
 }

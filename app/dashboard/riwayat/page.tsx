@@ -1,14 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
+import type { Attendance, User } from "@prisma/client";
+
+type AttendanceWithUser = Attendance & { user?: User | null };
 
 export default async function RiwayatDashboardPage() {
   // Ambil data riwayat absensi dari database
-  const attendances = await prisma.attendance.findMany({
+  const attendances = (await prisma.attendance.findMany({
     orderBy: { createdAt: "desc" },
     include: { user: true },
-    take: 20,
-  });
+    take: 50,
+  })) as AttendanceWithUser[];
 
   return (
     <div className="space-y-6">
@@ -33,13 +36,17 @@ export default async function RiwayatDashboardPage() {
               <tr>
                 <td colSpan={6} className="text-center py-8 text-[var(--muted)]">Belum ada data absensi.</td>
               </tr>
-            ) : attendances.map((a) => (
+            ) : attendances.map((a: AttendanceWithUser) => (
               <tr key={a.id} className="border-b last:border-none hover:bg-gray-50/50">
                 <td className="px-4 py-2 text-gray-700">{a.user?.name ?? '-'}</td>
                 <td className="px-4 py-2 text-gray-700">{new Date(a.createdAt).toLocaleString()}</td>
+                <td className="px-4 py-2 text-sm text-gray-700">
+                  <div>In: {a.checkIn ? new Date(a.checkIn).toLocaleString() : '-'}</div>
+                  <div>Out: {a.checkOut ? new Date(a.checkOut).toLocaleString() : '-'}</div>
+                </td>
                 <td className="px-4 py-2">
-                  <Badge variant={a.type === 'IN' ? 'success' : 'default'}>
-                    {a.type}
+                  <Badge variant={a.status === 'telat' ? 'danger' : a.status === 'pulang_dini' ? 'danger' : 'success'}>
+                    {a.status ?? a.type}
                   </Badge>
                 </td>
                 <td className="px-4 py-2 text-xs text-gray-600">
@@ -50,6 +57,7 @@ export default async function RiwayatDashboardPage() {
                   <img src={a.photo} alt="foto" className="w-12 h-12 object-cover rounded" />
                 </td>
                 <td className="px-4 py-2">
+                  <div className="text-sm">Durasi: {a.durationMinutes != null ? `${Math.floor(a.durationMinutes/60)}j ${a.durationMinutes%60}m` : '-'}</div>
                   <Button variant="secondary">Detail</Button>
                 </td>
               </tr>
