@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import Badge from "@/components/ui/Badge";
 
 export default function KaryawanPage() {
     const [users, setUsers] = useState<any[]>([]);
@@ -56,76 +57,120 @@ export default function KaryawanPage() {
     };
 
     return (
-        <div className="space-y-8">
-            <div className="flex justify-between items-center">
+        <div className="space-y-10">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800">Data Karyawan</h1>
-                    <p className="text-gray-600">Kelola informasi dan akun karyawan Anda</p>
+                    <h1 className="text-4xl font-display font-bold text-slate-900 tracking-tight">Data Karyawan</h1>
+                    <p className="text-slate-500 font-medium mt-1">Kelola informasi, akun, dan peran akses seluruh tim Anda.</p>
                 </div>
-                <Button variant="primary" onClick={() => setIsModalOpen(true)}>+ Tambah Karyawan</Button>
+                <Button variant="primary" onClick={() => setIsModalOpen(true)} className="h-12 px-6">
+                    <span className="text-xl">+</span> Tambah Karyawan
+                </Button>
             </div>
 
             {loading ? (
-                <p>Memuat data...</p>
+                <div className="py-20 flex flex-col items-center justify-center gap-4">
+                    <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Memproses Database...</p>
+                </div>
             ) : (
-                <Card className="p-0 overflow-hidden">
+                <Card className="p-0 overflow-hidden border-none shadow-premium bg-white">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        <table className="min-w-full">
+                            <thead>
+                                <tr className="bg-slate-50 border-b border-slate-100">
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identitas Karyawan</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email Resmi</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Peran Akses</th>
+                                    <th className="px-8 py-5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manajemen</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="divide-y divide-slate-50">
                                 {users.map((user) => (
-                                    <tr key={user.id}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'ADMIN' ? 'bg-purple-100 text-purple-800' : 'bg-green-100 text-green-800'}`}>
-                                                {user.role}
-                                            </span>
+                                    <tr key={user.id} className="group hover:bg-slate-50/50 transition-colors">
+                                        <td className="px-8 py-5 whitespace-nowrap">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                                                    {user.name.charAt(0)}
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-700">{user.name}</span>
+                                            </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <button className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                                            <button className="text-red-600 hover:text-red-900">Hapus</button>
+                                        <td className="px-8 py-5 whitespace-nowrap text-sm font-medium text-slate-500">{user.email}</td>
+                                        <td className="px-8 py-5 whitespace-nowrap">
+                                            <Badge variant={user.role === 'ADMIN' ? "default" : "success"}>
+                                                {user.role}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-8 py-5 whitespace-nowrap text-right">
+                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button className="p-2 rounded-lg text-indigo-600 hover:bg-indigo-50 transition-colors" title="Edit">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                                                </button>
+                                                <button className="p-2 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors" title="Hapus">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
+                        {users.length === 0 && (
+                            <div className="py-20 text-center">
+                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Belum Ada Data Karyawan</p>
+                            </div>
+                        )}
                     </div>
                 </Card>
             )}
 
-            {/* Simple Modal */}
+            {/* Premium Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-                    <Card className="max-w-md w-full p-6 space-y-4">
-                        <h2 className="text-xl font-bold">Tambah Karyawan Baru</h2>
-                        <div className="space-y-4">
-                            <Input placeholder="Nama Lengkap" value={name} onChange={e => setName(e.target.value)} />
-                            <Input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-                            <Input placeholder="Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-                            <select
-                                className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                                value={role}
-                                onChange={e => setRole(e.target.value)}
-                            >
-                                <option value="USER">USER (Karyawan)</option>
-                                <option value="ADMIN">ADMIN</option>
-                            </select>
-                        </div>
-                        <div className="flex gap-3 justify-end pt-4">
-                            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>Batal</Button>
-                            <Button variant="primary" onClick={handleAdd} disabled={submitting || !name || !email || !password}>
-                                {submitting ? "Menyimpan..." : "Simpan"}
-                            </Button>
-                        </div>
-                    </Card>
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6 z-[100]">
+                    <div className="w-full max-w-lg animate-in zoom-in-95 duration-300">
+                        <Card className="p-10 border-none shadow-2xl space-y-8 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16"></div>
+
+                            <div>
+                                <h2 className="text-3xl font-display font-bold text-slate-900 tracking-tight">Karyawan Baru</h2>
+                                <p className="text-slate-500 font-medium">Lengkapi rincian profil di bawah ini.</p>
+                            </div>
+
+                            <div className="space-y-5">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Nama Lengkap</label>
+                                    <Input placeholder="Contoh: Muhammad Naufal" value={name} onChange={e => setName(e.target.value)} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Alamat Email</label>
+                                    <Input placeholder="naufal@perusahaan.com" value={email} onChange={e => setEmail(e.target.value)} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Kata Sandi</label>
+                                    <Input placeholder="••••••••" type="password" value={password} onChange={e => setPassword(e.target.value)} />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Tingkatan Akses</label>
+                                    <select
+                                        className="w-full px-5 py-3 rounded-2xl border border-slate-200 bg-white/50 text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-300 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M2%204l4%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-[right_1.25rem_center] bg-no-repeat"
+                                        value={role}
+                                        onChange={e => setRole(e.target.value)}
+                                    >
+                                        <option value="USER">KARYAWAN (Standard)</option>
+                                        <option value="ADMIN">ADMINISTRATOR (Full Access)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4 pt-6">
+                                <Button variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1 h-12">Batal</Button>
+                                <Button variant="primary" onClick={handleAdd} disabled={submitting || !name || !email || !password} className="flex-1 h-12">
+                                    {submitting ? "Kirim Data..." : "Daftarkan Akun"}
+                                </Button>
+                            </div>
+                        </Card>
+                    </div>
                 </div>
             )}
         </div>

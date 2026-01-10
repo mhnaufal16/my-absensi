@@ -1,32 +1,61 @@
 @import "tailwindcss";
 
 :root {
-  /* Light mode */
-  --background: #f9fafb; /* gray-50 */
-  --foreground: #111827; /* gray-900 */
+  /* Premium Palette - Digital Indigo & Slate */
+  --primary: 243 75% 59%;
+  /* Digital Indigo */
+  --primary-glow: 243 75% 75% / 0.15;
+  --secondary: 263 70% 50%;
+  /* Violet */
 
-  --muted: #6b7280;      /* gray-500 */
-  --border: #e5e7eb;     /* gray-200 */
+  --background: 210 40% 98%;
+  /* Soft Gray-Blue */
+  --foreground: 222 47% 11%;
+  /* Deep Slate */
+
+  --muted: 215 16% 47%;
+  --muted-foreground: 215 20% 65%;
+
+  --border: 214 32% 91%;
+  --card: 0 0% 100%;
+
+  /* Status Colors */
+  --success: 142 71% 45%;
+  --warning: 38 92% 50%;
+  --danger: 347 77% 50%;
+
+  /* Elevation & Effects */
+  --shadow-soft: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-premium: 0 20px 25px -5px rgb(0 0 0 / 0.05), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #020617; /* slate-950 */
-    --foreground: #f8fafc; /* slate-50 */
-
-    --muted: #94a3b8;
-    --border: #1e293b;
-  }
+  --color-primary: hsl(var(--primary));
+  --color-secondary: hsl(var(--secondary));
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-outfit), sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background Decoration */
+body::before {
+  content: "";
+  position: fixed;
+  top: -10%;
+  right: -5%;
+  width: 40vw;
+  height: 40vw;
+  background: radial-gradient(circle, hsla(var(--primary), 0.05) 0%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
 }

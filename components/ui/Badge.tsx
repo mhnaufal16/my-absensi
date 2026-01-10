@@ -13,11 +13,11 @@ export default function Badge({
   return (
     <span
       className={clsx(
-        "px-2 py-0.5 rounded-full text-xs font-semibold",
+        "px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border",
         {
-          "bg-gray-200 text-gray-800": variant === "default",
-          "bg-emerald-100 text-emerald-700": variant === "success",
-          "bg-red-100 text-red-700": variant === "danger",
+          "bg-indigo-50 text-indigo-700 border-indigo-100": variant === "default",
+          "bg-emerald-50 text-emerald-700 border-emerald-100": variant === "success",
+          "bg-rose-50 text-rose-700 border-rose-100": variant === "danger",
         }
       )}
     >

@@ -10,11 +10,10 @@ export default function Input({ className, ...props }: InputProps) {
     <input
       {...props}
       className={clsx(
-        "w-full px-4 py-2 rounded-xl",
-        "border border-gray-300 bg-white",
-        "text-gray-900 placeholder-gray-400",
-        "focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500",
-        "transition-all duration-200",
+        "w-full px-5 py-3 rounded-2xl border border-slate-200 bg-white/50 backdrop-blur-sm",
+        "text-slate-900 placeholder:text-slate-400 font-medium",
+        "focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500",
+        "transition-all duration-300",
         className
       )}
     />

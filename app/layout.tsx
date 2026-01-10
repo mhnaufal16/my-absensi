@@ -1,4 +1,15 @@
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+});
 
 export const metadata = {
   title: "My Absensi",
@@ -11,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
-      <body className="bg-gray-100">
+    <html lang="id" className={`${inter.variable} ${outfit.variable}`}>
+      <body>
         {children}
       </body>
     </html>

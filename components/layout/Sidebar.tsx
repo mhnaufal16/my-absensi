@@ -31,24 +31,25 @@ export default function Sidebar() {
   return (
     <aside
       className="
-        w-64 min-h-screen
-        bg-[var(--background)]
-        border-r border-[var(--border)]
-        px-4 py-6
+        w-72 min-h-screen
+        bg-slate-950
+        border-r border-slate-900
+        px-6 py-10 flex flex-col gap-10
       "
     >
       {/* Brand */}
-      <div className="mb-8">
-        <h2 className="text-xl font-bold text-[var(--foreground)]">
+      <div className="flex flex-col gap-1 px-2">
+        <h2 className="text-2xl font-display font-bold text-white tracking-tight flex items-center gap-2">
+          <span className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20">M</span>
           MyAbsensi
         </h2>
-        <p className="text-xs text-[var(--muted)]">
-          Kamera & GPS
+        <p className="text-xs text-slate-500 font-medium px-1">
+          Kamera & GPS System
         </p>
       </div>
 
       {/* Menu */}
-      <nav className="space-y-1">
+      <nav className="space-y-2 flex-1">
         {menus.map((menu) => {
           const active = pathname === menu.href;
 
@@ -57,30 +58,45 @@ export default function Sidebar() {
               key={menu.name}
               href={menu.href}
               className={clsx(
-                "flex items-center justify-between px-3 py-2 rounded-xl text-sm font-medium transition-all",
+                "flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300",
                 active
-                  ? "bg-emerald-50 text-emerald-700"
-                  : "text-[var(--foreground)] hover:bg-gray-100"
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20 translate-x-1"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
               )}
             >
               <span>{menu.name}</span>
 
-              {menu.badge && <Badge>{menu.badge}</Badge>}
+              {menu.badge && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-rose-500 text-white font-bold animate-pulse">
+                  {menu.badge}
+                </span>
+              )}
             </Link>
           );
         })}
 
         {isAdmin && (
-          <div className="pt-4 mt-4 border-t border-[var(--border)]">
+          <div className="pt-6 mt-6 border-t border-slate-900">
             <Link
               href="/admin"
-              className="flex items-center px-3 py-2 rounded-xl text-sm font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all"
+              className={clsx(
+                "flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300",
+                pathname.startsWith('/admin')
+                  ? "bg-slate-800 text-indigo-400 border border-indigo-500/30"
+                  : "text-slate-400 hover:text-indigo-400 hover:bg-slate-900"
+              )}
             >
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shadow-[0_0_8px_indigo]"></span>
               🛡️ Admin Panel
             </Link>
           </div>
         )}
       </nav>
+
+      {/* Version or Support info */}
+      <div className="px-2 pt-6 border-t border-slate-900">
+        <p className="text-[10px] text-slate-600 uppercase tracking-widest font-bold">Version 2.0 Premium</p>
+      </div>
     </aside>
   );
 }
