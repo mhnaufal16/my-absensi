@@ -29,18 +29,25 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const userId = url.searchParams.get("userId");
+    const todayOnly = url.searchParams.get("todayOnly") !== "false";
+
     if (!userId) return NextResponse.json({ message: "userId required" }, { status: 400 });
 
     const uid = Number(userId);
-    const now = new Date();
-    const start = new Date(now);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 1);
+    const where: any = { userId: uid };
 
-    const attendance = await prisma.attendance.findFirst({
-      where: { userId: uid, createdAt: { gte: start, lt: end } },
-    });
+    if (todayOnly) {
+      const now = new Date();
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 1);
+      where.createdAt = { gte: start, lt: end };
+    }
+
+    const attendance = todayOnly
+      ? await prisma.attendance.findFirst({ where })
+      : await prisma.attendance.findMany({ where, orderBy: { createdAt: 'desc' }, take: 50 });
 
     return NextResponse.json({ success: true, attendance });
   } catch (err) {

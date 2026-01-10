@@ -1,6 +1,24 @@
+"use client";
+
 import Card from "@/components/ui/Card";
+import { useEffect, useState } from "react";
+
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
+  return null;
+}
 
 export default function DashboardPage() {
+  const [userName, setUserName] = useState("User");
+
+  useEffect(() => {
+    const name = getCookie("userName");
+    if (name) setUserName(decodeURIComponent(name));
+  }, []);
+
   const stats = [
     { label: "Total Hadir", value: "12", sub: "Karyawan hari ini", color: "from-emerald-500 to-teal-600", icon: "✨" },
     { label: "Terlambat", value: "02", sub: "Melewati jam masuk", color: "from-rose-500 to-pink-600", icon: "⏱️" },
@@ -11,7 +29,7 @@ export default function DashboardPage() {
     <div className="space-y-10">
       <div>
         <h1 className="text-4xl font-display font-bold text-slate-900 tracking-tight">
-          Selamat Datang, <span className="text-indigo-600">Naufal!</span>
+          Selamat Datang, <span className="text-indigo-600">{userName}!</span>
         </h1>
         <p className="text-slate-500 font-medium mt-1">Berikut ringkasan kehadiran tim hari ini.</p>
       </div>

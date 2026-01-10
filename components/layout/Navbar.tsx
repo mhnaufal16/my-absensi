@@ -15,11 +15,16 @@ function getCookie(name: string) {
 export default function Navbar() {
   const router = useRouter();
   const [role, setRole] = useState("Karyawan");
+  const [name, setName] = useState("User");
 
   useEffect(() => {
     const userRole = getCookie("userRole");
+    const userName = getCookie("userName");
+
     if (userRole === "ADMIN") setRole("Admin");
     else setRole("Karyawan");
+
+    if (userName) setName(decodeURIComponent(userName));
   }, []);
 
   const handleLogout = async () => {
@@ -54,7 +59,7 @@ export default function Navbar() {
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3 pr-6 border-r border-slate-100">
           <div className="text-right">
-            <p className="text-sm font-bold text-slate-900">Naufal</p>
+            <p className="text-sm font-bold text-slate-900">{name}</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md inline-block">
               {role}
             </p>

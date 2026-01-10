@@ -25,8 +25,9 @@ export async function POST(req: Request) {
       success: true,
       user: { id: user.id, name: user.name, email: user.email, role: (user as any).role }
     });
-    // set cookies for demo purposes
-    res.cookies.set("userId", String(user.id), { httpOnly: true, path: "/", maxAge: 60 * 60 * 24 * 7 });
+    // set cookies for identity
+    res.cookies.set("userId", String(user.id), { httpOnly: false, path: "/", maxAge: 60 * 60 * 24 * 7 });
+    res.cookies.set("userName", user.name, { httpOnly: false, path: "/", maxAge: 60 * 60 * 24 * 7 });
     res.cookies.set("userRole", (user as any).role, { httpOnly: false, path: "/", maxAge: 60 * 60 * 24 * 7 });
     return res;
   } catch (err) {
