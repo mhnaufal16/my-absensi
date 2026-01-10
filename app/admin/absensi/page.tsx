@@ -5,6 +5,11 @@ import Button from "@/components/ui/Button";
 
 export default async function AdminAbsensiPage() {
     const attendances = await prisma.attendance.findMany({
+        where: {
+            user: {
+                role: 'USER'
+            }
+        },
         orderBy: { createdAt: 'desc' },
         include: { user: true },
         take: 100

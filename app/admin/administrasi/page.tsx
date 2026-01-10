@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import clsx from "clsx";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Badge from "@/components/ui/Badge";
 
-export default function KaryawanPage() {
+export default function AdminManagementPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,12 +18,12 @@ export default function KaryawanPage() {
     const [password, setPassword] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
-    const fetchEmployees = async () => {
+    const fetchAdmins = async () => {
         try {
             const res = await fetch("/api/admin/employees");
             const data = await res.json();
-            // FILTER: Only show USERS (Employees) here
-            setUsers(data.filter((u: any) => u.role === "USER"));
+            // Filter only admins
+            setUsers(data.filter((u: any) => u.role === "ADMIN"));
         } catch (e) {
             console.error(e);
         } finally {
@@ -31,7 +32,7 @@ export default function KaryawanPage() {
     };
 
     useEffect(() => {
-        fetchEmployees();
+        fetchAdmins();
     }, []);
 
     const handleAdd = async () => {
@@ -39,15 +40,15 @@ export default function KaryawanPage() {
         try {
             const res = await fetch("/api/admin/employees", {
                 method: "POST",
-                body: JSON.stringify({ name, email, password, role: "USER" }),
+                body: JSON.stringify({ name, email, password, role: "ADMIN" }),
             });
             if (res.ok) {
                 setIsModalOpen(false);
-                fetchEmployees();
+                fetchAdmins();
                 setName(""); setEmail(""); setPassword("");
             } else {
                 const data = await res.json();
-                alert(data.message || "Gagal menambah karyawan");
+                alert(data.message || "Gagal menambah administrator");
             }
         } catch (e) {
             alert("Terjadi kesalahan");
@@ -60,18 +61,18 @@ export default function KaryawanPage() {
         <div className="space-y-10">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h1 className="text-4xl font-display font-bold text-slate-900 tracking-tight">Data Karyawan</h1>
-                    <p className="text-slate-500 font-medium mt-1">Kelola profil dan akun operasional seluruh anggota tim Anda.</p>
+                    <h1 className="text-4xl font-display font-bold text-slate-900 tracking-tight">Manajemen Administrator</h1>
+                    <p className="text-slate-500 font-medium mt-1">Kelola akun dengan hak akses penuh ke seluruh sistem manajemen.</p>
                 </div>
                 <Button variant="primary" onClick={() => setIsModalOpen(true)} className="h-12 px-6">
-                    <span className="text-xl">+</span> Tambah Karyawan
+                    <span className="text-xl">+</span> Tambah Admin
                 </Button>
             </div>
 
             {loading ? (
                 <div className="py-20 flex flex-col items-center justify-center gap-4">
                     <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Memproses Database...</p>
+                    <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Sinkronisasi Database...</p>
                 </div>
             ) : (
                 <Card className="p-0 overflow-hidden border-none shadow-premium bg-white">
@@ -79,9 +80,9 @@ export default function KaryawanPage() {
                         <table className="min-w-full">
                             <thead>
                                 <tr className="bg-slate-50 border-b border-slate-100">
-                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identitas Karyawan</th>
-                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email Resmi</th>
-                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Peran Akses</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identitas Admin</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email System</th>
+                                    <th className="px-8 py-5 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Status Akses</th>
                                     <th className="px-8 py-5 text-right text-[10px] font-bold text-slate-400 uppercase tracking-widest">Manajemen</th>
                                 </tr>
                             </thead>
@@ -90,7 +91,7 @@ export default function KaryawanPage() {
                                     <tr key={user.id} className="group hover:bg-slate-50/50 transition-colors">
                                         <td className="px-8 py-5 whitespace-nowrap">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                                                <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">
                                                     {user.name.charAt(0)}
                                                 </div>
                                                 <span className="text-sm font-bold text-slate-700">{user.name}</span>
@@ -98,7 +99,7 @@ export default function KaryawanPage() {
                                         </td>
                                         <td className="px-8 py-5 whitespace-nowrap text-sm font-medium text-slate-500">{user.email}</td>
                                         <td className="px-8 py-5 whitespace-nowrap">
-                                            <Badge variant="success">
+                                            <Badge variant="default">
                                                 {user.role}
                                             </Badge>
                                         </td>
@@ -118,7 +119,7 @@ export default function KaryawanPage() {
                         </table>
                         {users.length === 0 && (
                             <div className="py-20 text-center">
-                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Belum Ada Data Karyawan</p>
+                                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Belum Ada Data Administrator</p>
                             </div>
                         )}
                     </div>
@@ -130,21 +131,21 @@ export default function KaryawanPage() {
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6 z-[100]">
                     <div className="w-full max-w-lg animate-in zoom-in-95 duration-300">
                         <Card className="p-10 border-none shadow-2xl space-y-8 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16"></div>
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full -mr-16 -mt-16"></div>
 
                             <div>
-                                <h2 className="text-3xl font-display font-bold text-slate-900 tracking-tight">Karyawan Baru</h2>
-                                <p className="text-slate-500 font-medium">Daftarkan akun operasional untuk tim baru.</p>
+                                <h2 className="text-3xl font-display font-bold text-slate-900 tracking-tight">Administrator Baru</h2>
+                                <p className="text-slate-500 font-medium">Buat akun pengelola dengan akses penuh.</p>
                             </div>
 
                             <div className="space-y-5">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Nama Lengkap</label>
-                                    <Input placeholder="Contoh: Muhammad Naufal" value={name} onChange={e => setName(e.target.value)} />
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Nama Admin</label>
+                                    <Input placeholder="Nama lengkap administrator" value={name} onChange={e => setName(e.target.value)} />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Alamat Email</label>
-                                    <Input placeholder="naufal@perusahaan.com" value={email} onChange={e => setEmail(e.target.value)} />
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Email System</label>
+                                    <Input placeholder="admin@perusahaan.com" value={email} onChange={e => setEmail(e.target.value)} />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest px-1">Kata Sandi</label>
@@ -155,7 +156,7 @@ export default function KaryawanPage() {
                             <div className="flex gap-4 pt-6">
                                 <Button variant="secondary" onClick={() => setIsModalOpen(false)} className="flex-1 h-12">Batal</Button>
                                 <Button variant="primary" onClick={handleAdd} disabled={submitting || !name || !email || !password} className="flex-1 h-12">
-                                    {submitting ? "Mendaftarkan..." : "Konfirmasi Akun"}
+                                    {submitting ? "Kirim Data..." : "Aktifkan Admin"}
                                 </Button>
                             </div>
                         </Card>

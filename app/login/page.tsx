@@ -67,7 +67,7 @@ export default function LoginPage() {
 
           <div className="space-y-6">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Email Karyawan</label>
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Email Terdaftar</label>
               <Input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -94,7 +94,7 @@ export default function LoginPage() {
             ) : null}
 
             <Button onClick={submit} disabled={loading || !email || !password} className="w-full h-12 text-base">
-              {loading ? "Menghubungi Server..." : "Masuk ke Dashboard"}
+              {loading ? "Menghubungi Server..." : "Masuk ke Sistem"}
             </Button>
           </div>
         </Card>

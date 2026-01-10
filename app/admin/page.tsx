@@ -9,8 +9,9 @@ export default async function AdminDashboard() {
     const end = new Date(start);
     end.setDate(start.getDate() + 1);
 
-    const [totalKaryawan, todayAttendance] = await Promise.all([
+    const [totalKaryawan, totalAdmins, todayAttendance] = await Promise.all([
         (prisma.user as any).count({ where: { role: "USER" } }),
+        (prisma.user as any).count({ where: { role: "ADMIN" } }),
         prisma.attendance.findMany({
             where: {
                 createdAt: { gte: start, lt: end }
@@ -22,9 +23,9 @@ export default async function AdminDashboard() {
     const late = todayAttendance.filter((a: any) => a.status === 'telat').length;
 
     const stats = [
-        { label: "Total SDM", value: totalKaryawan, sub: "Karyawan Aktif", color: "from-indigo-600 to-indigo-700", icon: "👥" },
+        { label: "Total Karyawan", value: totalKaryawan, sub: "Staff Operasional", color: "from-indigo-600 to-indigo-700", icon: "👥" },
+        { label: "Total Admin", value: totalAdmins, sub: "Pengelola Sistem", color: "from-amber-500 to-orange-600", icon: "🛡️" },
         { label: "Check-in Hari Ini", value: checkedIn, sub: "Telah hadir", color: "from-emerald-500 to-teal-600", icon: "✅" },
-        { label: "Terlambat", value: late, sub: "Melewati jam masuk", color: "from-rose-500 to-pink-600", icon: "⏱️" },
     ];
 
     return (
