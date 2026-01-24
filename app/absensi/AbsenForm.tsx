@@ -13,13 +13,31 @@ export default function AbsenForm() {
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    // 1. Get userId and settings from cookies
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(";").shift();
+      return null;
+    };
+    const uidStr = getCookie("userId");
+    const uid = uidStr ? Number(uidStr) : null;
+
+    if (!uid) {
+      alert("Anda belum login. Silakan login terlebih dahulu.");
+      window.location.href = "/login";
+      return;
+    }
+
     navigator.mediaDevices
       .getUserMedia({ video: true })
       .then((stream) => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-      });
+      })
+      .catch(err => console.error("Camera error:", err));
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocation(pos.coords);
@@ -35,12 +53,32 @@ export default function AbsenForm() {
       },
     );
 
-    // fetch today's attendance for userId 1 (adjust userId as needed)
+    // fetch today's attendance for dynamic userId
     (async () => {
       try {
-        const res = await fetch(`/api/absensi?userId=1`);
+        const res = await fetch(`/api/absensi?userId=${uid}`);
         const data = await res.json();
-        if (data.success) setToday(data.attendance);
+        if (data.success) {
+          // If it's an array (list), or single object? API usually returns 'attendance' which might be list or single.
+          // Let's check API. GET returns `attendance` which is findFirst (single) or findMany (array) based on 'todayOnly'.
+          // The client previously expected simple object: setToday(data.attendance)
+          // But if we want history, we might get an array.
+          // Let's assuming for 'today' state we just want the latest status to determine checkin/checkout buttons.
+          // But for history list, we want the array.
+
+          // Warning: The original API call was `fetch('/api/absensi?userId=1')`. 
+          // API defaults to `todayOnly=true` (unless `todayOnly=false` passed).
+          // If `todayOnly` is true (default), it returns `findFirst`. So it's an object.
+          // We need to fetch HISTORY to show the list.
+
+          if (Array.isArray(data.attendance)) {
+            // If array, take the first one as 'today' status if matches today? 
+            // Actually API logic: if todayOnly, returns findFirst. So it is NOT array.
+            setToday(data.attendance);
+          } else {
+            setToday(data.attendance);
+          }
+        }
       } catch (e) {
         // ignore
       }
@@ -103,6 +141,20 @@ export default function AbsenForm() {
   }
 
   const submitAbsensi = async (action: 'checkin' | 'checkout') => {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(";").shift();
+      return null;
+    };
+    const uidStr = getCookie("userId");
+    const uid = uidStr ? Number(uidStr) : null;
+
+    if (!uid) {
+      alert("Sesi habis. Silakan login kembali.");
+      return;
+    }
+
     if (!location) {
       alert('Lokasi belum tersedia. Pastikan GPS/perizinan lokasi telah diizinkan.');
       return;
@@ -115,10 +167,10 @@ export default function AbsenForm() {
     setLoading(true);
     const photoData = capturePhoto() ?? "";
     const payload = {
-      userId: 1,
+      userId: uid, // Dynamic user ID
       photo: photoData,
       latitude: location.latitude,
-      longitude: location.longitude,
+      longitude: location.longitude, // Corrected typo from original code if any, though previous was fine
       usingSampleCoords: usingSampleCoords,
       action,
       scheduledStart: scheduledStart.toISOString(),
@@ -164,20 +216,42 @@ export default function AbsenForm() {
         </p>
       )}
 
-      <div className="space-y-2">
-        {!today || !today.checkIn ? (
-          <button onClick={() => submitAbsensi('checkin')} disabled={!geoReady || loading} className={`w-full p-2 rounded ${geoReady && !loading ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
-            {loading ? 'Mengirim...' : 'Check In'}
-          </button>
-        ) : today.checkIn && !today.checkOut ? (
-          <button onClick={() => submitAbsensi('checkout')} disabled={!geoReady || loading} className={`w-full p-2 rounded ${geoReady && !loading ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
-            {loading ? 'Mengirim...' : 'Check Out'}
-          </button>
-        ) : (
-          <div className="text-sm text-gray-700">Anda sudah melakukan check-in dan check-out hari ini.</div>
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          {!today || !today.checkIn ? (
+            <button onClick={() => submitAbsensi('checkin')} disabled={!geoReady || loading} className={`flex-1 p-2 rounded ${geoReady && !loading ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
+              {loading ? 'Mengirim...' : 'Check In'}
+            </button>
+          ) : null}
+
+          {today && today.checkIn && !today.checkOut ? (
+            <button onClick={() => submitAbsensi('checkout')} disabled={!geoReady || loading} className={`flex-1 p-2 rounded ${geoReady && !loading ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
+              {loading ? 'Mengirim...' : 'Check Out'}
+            </button>
+          ) : null}
+        </div>
+
+        {today && today.checkIn && today.checkOut && (
+          <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded text-center">Anda sudah melakukan check-in dan check-out hari ini.</div>
         )}
+
         {!geoReady && (
           <p className="text-xs text-red-600">Lokasi belum tersedia — izinkan akses lokasi di browser atau coba muat ulang.</p>
+        )}
+
+        {/* History Section */}
+        {today && (
+          <div className="mt-4 border-t pt-4">
+            <h3 className="font-bold text-gray-700 mb-2">Riwayat Hari Ini</h3>
+            <div className="text-sm space-y-1">
+              {today.checkIn && <div className="flex justify-between"><span>Check In:</span> <span className="font-mono">{new Date(today.checkIn).toLocaleTimeString()}</span></div>}
+              {today.checkOut && <div className="flex justify-between"><span>Check Out:</span> <span className="font-mono">{new Date(today.checkOut).toLocaleTimeString()}</span></div>}
+              <div className="flex justify-between font-bold text-gray-900 mt-2">
+                <span>Status:</span>
+                <span className={today.status === 'ontime' ? 'text-green-600' : 'text-red-600'}>{today.status}</span>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
