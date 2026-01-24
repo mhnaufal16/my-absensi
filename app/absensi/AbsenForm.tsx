@@ -61,62 +61,98 @@ export default function AbsenForm() {
     canvas.height = h;
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
+
+    // 1. Draw video
     ctx.drawImage(video, 0, 0, w, h);
+
+    // 2. Add Watermark / Timestamp
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const timeStr = now.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    const latInfo = location?.latitude ? location.latitude.toFixed(6) : 'N/A';
+    const lngInfo = location?.longitude ? location.longitude.toFixed(6) : 'N/A';
+    const locStr = `Loc: ${latInfo}, ${lngInfo}`;
+
+    // Background shade for text readability
+    const barHeight = 60;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, h - barHeight, w, barHeight);
+
+    // Text settings
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 16px monospace';
+    // Remove shadow if not needed, or keep for contrast
+    ctx.shadowColor = 'black';
+    ctx.shadowBlur = 2;
+
+    // Draw lines
+    ctx.fillText(`${dateStr} - ${timeStr}`, 15, h - 35);
+    ctx.fillText(locStr, 15, h - 15);
+
     // default to jpeg base64
     return canvas.toDataURL('image/jpeg', 0.8);
   }
 
-const submitAbsensi = async (action: 'checkin'|'checkout') => {
-  if (!location) {
-    alert('Lokasi belum tersedia. Pastikan GPS/perizinan lokasi telah diizinkan.');
-    return;
-  }
-  const scheduledStart = new Date();
-  scheduledStart.setHours(8,0,0,0);
-  const scheduledEnd = new Date();
-  scheduledEnd.setHours(17,0,0,0);
-
-  setLoading(true);
-  const photoData = capturePhoto() ?? "";
-  const payload = {
-    userId: 1,
-    photo: photoData,
-    latitude: location.latitude,
-    longitude: location.longitude,
-    usingSampleCoords: usingSampleCoords,
-    action,
-    scheduledStart: scheduledStart.toISOString(),
-    scheduledEnd: scheduledEnd.toISOString(),
-  };
-
-  console.log('Sending attendance payload:', payload);
-
-  try {
-    const res = await fetch("/api/absensi", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    const text = await res.text();
-    let data: any = null;
-    try { data = JSON.parse(text); } catch (e) { data = { text }; }
-
-    console.log('Response status', res.status, data);
-
-    if (!res.ok) {
-      alert((data && data.message) ? data.message : `Request failed: ${res.status}`);
-    } else {
-      alert(`Absensi berhasil: ${data.attendance?.status ?? 'OK'}`);
-      setToday(data.attendance);
+  const submitAbsensi = async (action: 'checkin' | 'checkout') => {
+    if (!location) {
+      alert('Lokasi belum tersedia. Pastikan GPS/perizinan lokasi telah diizinkan.');
+      return;
     }
-  } catch (err) {
-    console.error('Network error while sending attendance', err);
-    alert('Gagal mengirim absensi: ' + String(err));
-  } finally {
-    setLoading(false);
-  }
-};
+    const scheduledStart = new Date();
+    scheduledStart.setHours(8, 0, 0, 0);
+    const scheduledEnd = new Date();
+    scheduledEnd.setHours(17, 0, 0, 0);
+
+    setLoading(true);
+    const photoData = capturePhoto() ?? "";
+    const payload = {
+      userId: 1,
+      photo: photoData,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      usingSampleCoords: usingSampleCoords,
+      action,
+      scheduledStart: scheduledStart.toISOString(),
+      scheduledEnd: scheduledEnd.toISOString(),
+    };
+
+    console.log('Sending attendance payload:', payload);
+
+    try {
+      const res = await fetch("/api/absensi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await res.text();
+      let data: any = null;
+      try { data = JSON.parse(text); } catch (e) { data = { text }; }
+
+      console.log('Response status', res.status, data);
+
+      if (!res.ok) {
+        alert((data && data.message) ? data.message : `Request failed: ${res.status}`);
+      } else {
+        alert(`Absensi berhasil: ${data.attendance?.status ?? 'OK'}`);
+        setToday(data.attendance);
+      }
+    } catch (err) {
+      console.error('Network error while sending attendance', err);
+      alert('Gagal mengirim absensi: ' + String(err));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white p-4 rounded shadow w-full max-w-md">
